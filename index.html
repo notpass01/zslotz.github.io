@@ -2,402 +2,205 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Gates of Olympus Demo V4</title>
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Olympus Style Slot Demo</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,Helvetica,sans-serif;}
-
 body{
-background:linear-gradient(180deg,#120826,#25114d,#130822);
-min-height:100vh;
+margin:0;
+font-family:Arial,sans-serif;
+background:radial-gradient(circle at top,#2b1b4d,#0b0718);
+color:#fff;
 display:flex;
 justify-content:center;
 align-items:center;
-color:#fff;
+min-height:100vh;
+overflow:hidden;
 }
-
-.game{
-width:440px;
-background:#1d123d;
-padding:18px;
+body:before{
+content:'';
+position:fixed;
+top:0;left:0;right:0;bottom:0;
+background-image:radial-gradient(#ffffff22 1px,transparent 1px);
+background-size:3px 3px;
+opacity:0.3;
+pointer-events:none;
+}
+.wrap{
+width:520px;
+background:linear-gradient(180deg,#2a1b52,#120a2a);
+padding:20px;
 border-radius:22px;
-border:2px solid gold;
-box-shadow:0 0 30px rgba(0,0,0,.6);
+box-shadow:0 0 40px rgba(255,200,0,0.15);
+border:2px solid rgba(255,215,0,0.25);
+position:relative;
 }
-
-.title{
+h1{
 text-align:center;
-font-size:28px;
-font-weight:bold;
-color:#ffd700;
-margin-bottom:14px;
+margin:0 0 10px;
+font-size:30px;
+color:#ffd36b;
+text-shadow:0 0 10px rgba(255,200,0,0.4);
 }
-
 .grid{
 display:grid;
 grid-template-columns:repeat(6,1fr);
 gap:6px;
-margin-bottom:14px;
+margin-bottom:15px;
 }
-
 .cell{
-height:58px;
-background:linear-gradient(180deg,#5a3bb3,#2d195c);
-border:2px solid #d4af37;
+height:70px;
+background:linear-gradient(180deg,#3a2a6a,#1a1038);
+border:1px solid rgba(255,215,0,0.35);
 border-radius:12px;
 display:flex;
-justify-content:center;
 align-items:center;
-font-size:24px;
-font-weight:bold;
-text-align:center;
+justify-content:center;
+font-size:34px;
+box-shadow:inset 0 0 10px rgba(0,0,0,0.5);
 }
-
-.scatter{
-background:linear-gradient(180deg,#ffd700,#c68b00);
-color:#111;
-}
-
-.multi{
-background:linear-gradient(180deg,#46ff87,#169d45);
-color:#111;
-font-size:18px;
-}
-
-.win{
-animation:blink .6s infinite alternate;
-}
-
-@keyframes blink{
-from{transform:scale(1);}
-to{transform:scale(1.1);}
-}
-
-.panel{
-font-size:15px;
-line-height:1.8;
-}
-
 .controls{
-display:grid;
-grid-template-columns:1fr 2fr 1fr;
-gap:8px;
-margin-top:12px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+gap:10px;
+flex-wrap:wrap;
 }
-
 button{
-padding:12px;
 border:none;
+background:linear-gradient(180deg,#ffd36b,#ffb300);
+color:#111;
+padding:10px 14px;
 border-radius:12px;
-font-size:16px;
-font-weight:bold;
+font-weight:800;
 cursor:pointer;
-background:#ffb400;
+box-shadow:0 5px 15px rgba(0,0,0,0.4);
 }
-
-.buy{
+button:hover{transform:scale(1.05)}
+.info{
 margin-top:10px;
-width:100%;
-background:#48ff93;
+font-size:14px;
+line-height:1.6;
 }
-
-.msg{
+.win{
+animation:flash .5s infinite alternate;
+}
+@keyframes flash{
+from{transform:scale(1)}
+to{transform:scale(1.15);filter:brightness(1.5)}
+}
+.topbar{
 text-align:center;
-margin-top:10px;
-font-weight:bold;
-min-height:24px;
-color:#8dff75;
+margin-bottom:10px;
+font-size:12px;
+opacity:0.8;
 }
 </style>
 </head>
 <body>
-
-<div class="game">
-
-<div class="title">⚡ Gates of Olympus ⚡</div>
-
-<div class="grid" id="grid"></div>
-
-<div class="panel">
-<div>Bakiye: <span id="balance">100000</span> ₺</div>
-<div>Bahis: <span id="bet">10</span> ₺</div>
-<div>Kazanç: <span id="win">0</span> ₺</div>
-<div>Free Spin: <span id="free">0</span></div>
+<div class='wrap'>
+<div class='topbar'>⚡ Olympus Inspired Demo Slot ⚡</div>
+<h1>⚡ ZEUS SLOT ⚡</h1>
+<div id='grid' class='grid'></div>
+<div class='controls'>
+<button onclick='betDown()'>- Bet</button>
+<button onclick='spin()'>SPIN</button>
+<button onclick='betUp()'>+ Bet</button>
 </div>
-
-<div class="controls">
-<button onclick="betDown()">-</button>
-<button onclick="spin()">SPIN</button>
-<button onclick="betUp()">+</button>
+<div class='info'>
+<div>Bakiye: <span id='bal'>1000</span> ₺</div>
+<div>Bahis: <span id='bet'>10</span> ₺</div>
+<div>Kazanç: <span id='win'>0</span> ₺</div>
+<div id='msg'>Hazır</div>
 </div>
-
-<button class="buy" onclick="buyFeature()">BUY FREESPINS</button>
-
-<div class="msg" id="msg">Hazır</div>
-
 </div>
 
 <script>
-const symbols=['💎','🟩','🟨','🟥','🔷','🟣','👑','⏳'];
-const scat='⚡';
-const multiValues=[2,3,5,10,25,50,100,250,500];
+const symbols=['💎','⚡','👑','🔷','🟣','🟢'];
+const grid=document.getElementById('grid');
+let balance=1000,bet=10,spinning=false;
 
-let balance=100000;
-let bet=10;
-let totalWin=0;
-let freeSpins=0;
-let busy=false;
-
-const grid=document.getElementById("grid");
-const balanceEl=document.getElementById("balance");
-const betEl=document.getElementById("bet");
-const winEl=document.getElementById("win");
-const freeEl=document.getElementById("free");
-const msg=document.getElementById("msg");
-
-function randomItem(){
-
-let r=Math.random();
-
-if(r<0.08) return {type:"scatter",value:scat};
-
-if(r<0.15){
-let m=multiValues[Math.floor(Math.random()*multiValues.length)];
-return {type:"multi",value:m};
-}
-
-return {
-type:"symbol",
-value:symbols[Math.floor(Math.random()*symbols.length)]
-};
-}
-
-function createBoard(){
-return Array.from({length:30},()=>randomItem());
-}
-
-function draw(board,wins=[]){
-
+function render(vals=[],wins=[]){
 grid.innerHTML='';
-
-board.forEach((item,i)=>{
-
-let d=document.createElement("div");
-
-d.className='cell';
-
-if(item.type==="scatter") d.classList.add("scatter");
-if(item.type==="multi") d.classList.add("multi");
-if(wins.includes(i)) d.classList.add("win");
-
-if(item.type==="multi"){
-d.textContent=item.value+"x";
-}else{
-d.textContent=item.value;
-}
-
+for(let i=0;i<30;i++){
+const d=document.createElement('div');
+d.className='cell'+(wins.includes(i)?' win':'');
+d.textContent=vals[i]||symbols[Math.floor(Math.random()*symbols.length)];
 grid.appendChild(d);
-
-});
-}
-
-function updateUI(){
-balanceEl.textContent=balance;
-betEl.textContent=bet;
-winEl.textContent=totalWin;
-freeEl.textContent=freeSpins;
-}
-
-function betUp(){
-if(bet<1000) bet+=10;
-updateUI();
-}
-
-function betDown(){
-if(bet>10) bet-=10;
-updateUI();
-}
-
-function countWins(board){
-
-let counts={};
-let payout=0;
-let winIdx=[];
-let multiplier=1;
-
-board.forEach((item,i)=>{
-
-if(item.type==="symbol"){
-counts[item.value]=(counts[item.value]||0)+1;
-}
-
-if(item.type==="multi"){
-multiplier += item.value;
-}
-
-});
-
-for(let sym in counts){
-
-let c=counts[sym];
-
-if(c>=8){
-
-let multi=c>=12?5:c>=10?3:2;
-
-payout += bet*multi;
-
-board.forEach((item,i)=>{
-if(item.type==="symbol" && item.value===sym){
-winIdx.push(i);
-}
-});
 }
 }
 
-return {payout,winIdx,multiplier};
+function update(){
+document.getElementById('bal').textContent=balance;
+document.getElementById('bet').textContent=bet;
+}
+
+function betUp(){if(bet<100)bet+=10;update()}
+function betDown(){if(bet>10)bet-=10;update()}
+
+function randBoard(){return Array.from({length:30},()=>symbols[Math.floor(Math.random()*symbols.length)])}
+
+function calc(board){
+let total=0;let wins=[];
+for(let s of symbols){
+let count=board.filter(x=>x===s).length;
+if(count>=8){
+let mult=count>=12?5:count>=10?3:2;
+total+=bet*mult;
+board.forEach((v,i)=>{if(v===s)wins.push(i)});
+}
+}
+return {total,wins};
 }
 
 function tumble(board){
-
 let total=0;
-let finalMulti=1;
-
-for(let n=0;n<8;n++){
-
-let res=countWins(board);
-
-if(res.payout<=0) break;
-
-total += res.payout;
-finalMulti = res.multiplier;
-
-res.winIdx.forEach(i=>board[i]=null);
-
-for(let col=0;col<6;col++){
-
-let arr=[];
-
-for(let row=0;row<5;row++){
-
-let idx=row*6+col;
-
-if(board[idx]) arr.push(board[idx]);
-
+let loops=0;
+let mult=1;
+while(loops<8){
+let res=calc(board);
+if(res.total===0)break;
+total+=res.total;
+res.wins.forEach(i=>board[i]='');
+for(let c=0;c<6;c++){
+let col=[];
+for(let r=0;r<5;r++){
+let idx=r*6+c;
+if(board[idx])col.push(board[idx]);
 }
-
-while(arr.length<5){
-arr.unshift(randomItem());
+while(col.length<5)col.unshift(symbols[Math.floor(Math.random()*symbols.length)]);
+for(let r=0;r<5;r++)board[r*6+c]=col[r];
 }
-
-for(let row=0;row<5;row++){
-board[row*6+col]=arr[row];
+if(Math.random()<0.4)mult+=Math.floor(Math.random()*5)+2;
+loops++;
 }
-
-}
-
-}
-
-total*=finalMulti;
-
-return {board,total,finalMulti};
+return {board,total:total*mult,mult};
 }
 
 function spin(){
-
-if(busy) return;
-if(balance<bet && freeSpins===0) return;
-
-busy=true;
-totalWin=0;
-
-if(freeSpins>0){
-freeSpins--;
-}else{
+if(spinning||balance<bet)return;
+spinning=true;
 balance-=bet;
-}
-
-updateUI();
-
-msg.textContent="Zeus döndürüyor...";
-
+update();
+document.getElementById('msg').textContent='Zeus döndürüyor...';
 let t=0;
-
-let anim=setInterval(()=>{
-
-draw(createBoard());
-
+const iv=setInterval(()=>{
+render(randBoard());
 t++;
-
 if(t>10){
-
-clearInterval(anim);
-
-let board=createBoard();
-
-let scatCount=board.filter(x=>x.type==="scatter").length;
-
-if(scatCount>=4){
-freeSpins += 15;
-}
-
+clearInterval(iv);
+let board=randBoard();
 let res=tumble(board);
-
-draw(res.board);
-
-totalWin=res.total;
-balance+=totalWin;
-
-updateUI();
-
-if(scatCount>=4){
-msg.textContent="⚡ 4 Scatter +15 Free Spins";
+render(res.board,res.board.map((_,i)=>res.board[i]));
+balance+=res.total;
+document.getElementById('win').textContent=res.total;
+document.getElementById('msg').textContent=res.total>0?'⚡ Kazandın x'+res.mult:'Tekrar dene';
+update();
+spinning=false;
 }
-else if(totalWin>0){
-msg.textContent="Kazandın! x"+res.finalMulti;
-}
-else{
-msg.textContent="Tekrar dene";
+},90);
 }
 
-busy=false;
-}
-
-},80);
-}
-
-function buyFeature(){
-
-if(busy) return;
-
-let cost=bet*100;
-
-if(balance<cost){
-msg.textContent="Yetersiz bakiye";
-return;
-}
-
-balance-=cost;
-freeSpins+=15;
-
-let board=createBoard();
-
-board[0]={type:"scatter",value:scat};
-board[6]={type:"scatter",value:scat};
-board[12]={type:"scatter",value:scat};
-board[18]={type:"scatter",value:scat};
-
-draw(board);
-
-updateUI();
-
-msg.textContent="⚡ BUY FREESPINS +15";
-}
-
-draw(createBoard());
-updateUI();
+render();update();
 </script>
-
 </body>
 </html>
