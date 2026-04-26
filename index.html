@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Gates of Olympus Demo V2</title>
+<title>Gates of Olympus Demo V3</title>
 
 <style>
 *{
@@ -19,24 +19,24 @@ min-height:100vh;
 display:flex;
 justify-content:center;
 align-items:center;
-color:white;
+color:#fff;
 }
 
 .game{
-width:430px;
+width:440px;
 background:#1d123d;
 padding:18px;
-border-radius:20px;
-box-shadow:0 0 30px rgba(0,0,0,.6);
+border-radius:22px;
 border:2px solid gold;
+box-shadow:0 0 30px rgba(0,0,0,.6);
 }
 
 .title{
 text-align:center;
 font-size:28px;
 font-weight:bold;
-margin-bottom:15px;
 color:#ffd700;
+margin-bottom:14px;
 }
 
 .grid{
@@ -56,7 +56,6 @@ justify-content:center;
 align-items:center;
 font-size:28px;
 font-weight:bold;
-transition:.2s;
 }
 
 .win{
@@ -69,38 +68,40 @@ to{transform:scale(1.1);}
 }
 
 .panel{
-margin-top:10px;
-font-size:15px;
 line-height:1.8;
+font-size:15px;
 }
 
 .controls{
-display:flex;
+display:grid;
+grid-template-columns:1fr 2fr 1fr;
 gap:8px;
 margin-top:12px;
 }
 
 button{
-flex:1;
 padding:12px;
 border:none;
 border-radius:12px;
+font-size:16px;
 font-weight:bold;
 cursor:pointer;
-font-size:16px;
 background:#ffb400;
+color:#111;
 }
 
-button:hover{
-opacity:.9;
+.buy{
+margin-top:10px;
+width:100%;
+background:#42ff8c;
 }
 
 .msg{
-margin-top:10px;
 text-align:center;
-color:#8cff66;
+margin-top:10px;
+min-height:24px;
 font-weight:bold;
-min-height:22px;
+color:#7dff6e;
 }
 </style>
 </head>
@@ -110,10 +111,10 @@ min-height:22px;
 
 <div class="title">⚡ Gates of Olympus ⚡</div>
 
-<div id="grid" class="grid"></div>
+<div class="grid" id="grid"></div>
 
 <div class="panel">
-<div>Bakiye: <span id="balance">1000</span> ₺</div>
+<div>Bakiye: <span id="balance">100000</span> ₺</div>
 <div>Bahis: <span id="bet">10</span> ₺</div>
 <div>Kazanç: <span id="win">0</span> ₺</div>
 <div>Free Spin: <span id="free">0</span></div>
@@ -125,25 +126,32 @@ min-height:22px;
 <button onclick="betUp()">+</button>
 </div>
 
+<button class="buy" onclick="buyFeature()">BUY FREESPINS</button>
+
 <div class="msg" id="msg">Hazır</div>
 
 </div>
 
 <script>
-const symbols = ['💎','🟩','🟨','🟥','🔷','🟣','👑','⏳'];
-const scatter = '⚡';
-const multipliers = [2,3,5,10,25,50,100,250,500];
+const symbols=['💎','🟩','🟨','🟥','🔷','🟣','👑','⏳'];
+const scatter='⚡';
+const multipliers=[2,3,5,10,25,50,100,250,500];
 
-let balance = 1000;
-let bet = 10;
-let totalWin = 0;
-let freeSpins = 0;
-let busy = false;
+let balance=100000;
+let bet=10;
+let totalWin=0;
+let freeSpins=0;
+let busy=false;
 
-const grid = document.getElementById("grid");
+const grid=document.getElementById("grid");
+const balanceEl=document.getElementById("balance");
+const betEl=document.getElementById("bet");
+const winEl=document.getElementById("win");
+const freeEl=document.getElementById("free");
+const msg=document.getElementById("msg");
 
 function randomSymbol(){
-if(Math.random() < 0.08) return scatter;
+if(Math.random()<0.07) return scatter;
 return symbols[Math.floor(Math.random()*symbols.length)];
 }
 
@@ -154,22 +162,22 @@ return Array.from({length:30},()=>randomSymbol());
 function draw(board,wins=[]){
 grid.innerHTML='';
 board.forEach((s,i)=>{
-let div=document.createElement("div");
-div.className='cell'+(wins.includes(i)?' win':'');
-div.textContent=s;
-grid.appendChild(div);
+let d=document.createElement("div");
+d.className='cell'+(wins.includes(i)?' win':'');
+d.textContent=s;
+grid.appendChild(d);
 });
 }
 
 function updateUI(){
-balanceEl.textContent = balance;
-betEl.textContent = bet;
-winEl.textContent = totalWin;
-freeEl.textContent = freeSpins;
+balanceEl.textContent=balance;
+betEl.textContent=bet;
+winEl.textContent=totalWin;
+freeEl.textContent=freeSpins;
 }
 
 function betUp(){
-if(bet<100) bet+=10;
+if(bet<1000) bet+=10;
 updateUI();
 }
 
@@ -180,8 +188,8 @@ updateUI();
 
 function countWins(board){
 let counts={};
-let winIdx=[];
 let payout=0;
+let winIdx=[];
 
 board.forEach(s=>{
 if(s!==scatter){
@@ -193,8 +201,8 @@ for(let sym in counts){
 let c=counts[sym];
 
 if(c>=8){
-let multi = c>=12 ? 5 : c>=10 ? 3 : 2;
-payout += bet * multi;
+let multi=c>=12?5:c>=10?3:2;
+payout += bet*multi;
 
 board.forEach((v,i)=>{
 if(v===sym) winIdx.push(i);
@@ -207,17 +215,17 @@ return {payout,winIdx};
 
 function tumble(board){
 let total=0;
-let finalMulti=0;
+let finalMulti=1;
 
-for(let loop=0;loop<8;loop++){
+for(let n=0;n<8;n++){
 
-let result = countWins(board);
+let res=countWins(board);
 
-if(result.payout<=0) break;
+if(res.payout<=0) break;
 
-total += result.payout;
+total += res.payout;
 
-result.winIdx.forEach(i=>board[i]='');
+res.winIdx.forEach(i=>board[i]='');
 
 for(let col=0;col<6;col++){
 
@@ -235,18 +243,14 @@ arr.unshift(randomSymbol());
 for(let row=0;row<5;row++){
 board[row*6+col]=arr[row];
 }
-
 }
 
 if(Math.random()<0.35){
 finalMulti += multipliers[Math.floor(Math.random()*multipliers.length)];
 }
-
 }
 
-if(finalMulti>0){
 total*=finalMulti;
-}
 
 return {board,total,finalMulti};
 }
@@ -254,7 +258,6 @@ return {board,total,finalMulti};
 function spin(){
 
 if(busy) return;
-
 if(balance<bet && freeSpins===0) return;
 
 busy=true;
@@ -277,44 +280,68 @@ draw(createBoard());
 
 t++;
 
-if(t>12){
+if(t>10){
 
 clearInterval(anim);
 
 let board=createBoard();
 
-let scatters = board.filter(x=>x===scatter).length;
+let scat=board.filter(x=>x===scatter).length;
 
-if(scatters>=4){
-freeSpins+=10;
+if(scat>=4){
+freeSpins += 15;
 }
 
-let result=tumble(board);
+let res=tumble(board);
 
-draw(result.board);
+draw(res.board);
 
-totalWin=result.total;
-
+totalWin=res.total;
 balance += totalWin;
 
 updateUI();
 
-if(scatters>=4){
-msg.textContent="⚡ FREE SPIN +10";
-}
-else if(totalWin>0){
-msg.textContent="Kazandın! x"+(result.finalMulti||1);
-}
-else{
+if(scat>=4){
+msg.textContent="⚡ 4 Scatter! +15 Free Spins";
+}else if(totalWin>0){
+msg.textContent="Kazandın x"+res.finalMulti;
+}else{
 msg.textContent="Tekrar dene";
 }
 
 busy=false;
-
 }
 
-},90);
+},80);
+}
 
+function buyFeature(){
+
+if(busy) return;
+
+let cost=bet*100;
+
+if(balance<cost){
+msg.textContent="Yetersiz bakiye";
+return;
+}
+
+balance -= cost;
+freeSpins += 15;
+
+let board=createBoard();
+
+/* 4 scatter garanti */
+board[0]=scatter;
+board[5]=scatter;
+board[12]=scatter;
+board[20]=scatter;
+
+draw(board);
+
+updateUI();
+
+msg.textContent="⚡ BUY FREESPINS ALINDI (+15)";
 }
 
 draw(createBoard());
