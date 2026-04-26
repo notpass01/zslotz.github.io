@@ -2,61 +2,324 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Slot Demo</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Gates of Olympus Demo V2</title>
+
 <style>
-body{margin:0;font-family:Arial,sans-serif;background:#1b1433;color:#fff;display:flex;justify-content:center;align-items:center;min-height:100vh}
-.wrap{width:420px;background:#2a1d52;padding:20px;border-radius:20px;box-shadow:0 10px 30px rgba(0,0,0,.4)}
-h1{text-align:center;margin:0 0 15px;font-size:28px}
-.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:15px}
-.cell{height:72px;background:linear-gradient(180deg,#5a3bb3,#2b1b57);border:2px solid #d4af37;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:bold}
-.controls{display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap}
-button{border:none;background:#ffb400;color:#111;padding:10px 14px;border-radius:12px;font-weight:700;cursor:pointer}
-button:hover{transform:translateY(-1px)}
-.info{font-size:14px;margin-top:10px;line-height:1.6}
-.win{animation:flash .6s infinite alternate}
-@keyframes flash{from{transform:scale(1)}to{transform:scale(1.08)}}
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial,Helvetica,sans-serif;
+}
+
+body{
+background:linear-gradient(180deg,#120826,#25114d,#130822);
+min-height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+color:white;
+}
+
+.game{
+width:430px;
+background:#1d123d;
+padding:18px;
+border-radius:20px;
+box-shadow:0 0 30px rgba(0,0,0,.6);
+border:2px solid gold;
+}
+
+.title{
+text-align:center;
+font-size:28px;
+font-weight:bold;
+margin-bottom:15px;
+color:#ffd700;
+}
+
+.grid{
+display:grid;
+grid-template-columns:repeat(6,1fr);
+gap:6px;
+margin-bottom:14px;
+}
+
+.cell{
+height:58px;
+background:linear-gradient(180deg,#5a3bb3,#2d195c);
+border:2px solid #d4af37;
+border-radius:12px;
+display:flex;
+justify-content:center;
+align-items:center;
+font-size:28px;
+font-weight:bold;
+transition:.2s;
+}
+
+.win{
+animation:blink .6s infinite alternate;
+}
+
+@keyframes blink{
+from{transform:scale(1);}
+to{transform:scale(1.1);}
+}
+
+.panel{
+margin-top:10px;
+font-size:15px;
+line-height:1.8;
+}
+
+.controls{
+display:flex;
+gap:8px;
+margin-top:12px;
+}
+
+button{
+flex:1;
+padding:12px;
+border:none;
+border-radius:12px;
+font-weight:bold;
+cursor:pointer;
+font-size:16px;
+background:#ffb400;
+}
+
+button:hover{
+opacity:.9;
+}
+
+.msg{
+margin-top:10px;
+text-align:center;
+color:#8cff66;
+font-weight:bold;
+min-height:22px;
+}
 </style>
 </head>
 <body>
-<div class='wrap'>
-<h1>⚡ Gates of Olympus ⚡</h1>
-<div id='grid' class='grid'></div>
-<div class='controls'>
-<button onclick='betDown()'>- Bet</button>
-<button onclick='spin()'>SPIN</button>
-<button onclick='betUp()'>+ Bet</button>
-</div>
-<div class='info'>
-<div>Bakiye: <span id='bal'>1000</span> ₺</div>
-<div>Bahis: <span id='bet'>10</span> ₺</div>
-<div>Kazanç: <span id='win'>0</span> ₺</div>
-<div id='msg'>Hazır</div>
-</div>
-</div>
-<script>
-const symbols=['💎','⚡','👑','⏳','🟣','🔷','🟩','🟨','🟥'];
-const grid=document.getElementById('grid');
-let balance=1000,bet=10,spinning=false;
-function render(vals=[],wins=[]){grid.innerHTML='';for(let i=0;i<15;i++){const d=document.createElement('div');d.className='cell'+(wins.includes(i)?' win':'');d.textContent=vals[i]||symbols[Math.floor(Math.random()*symbols.length)];grid.appendChild(d)}}
-function update(){bal.textContent=balance;betEl=document.getElementById('bet');betEl.textContent=bet;}
-function betUp(){if(bet<100)bet+=10;update()}
-function betDown(){if(bet>10)bet-=10;update()}
-function randBoard(){return Array.from({length:15},()=>symbols[Math.floor(Math.random()*symbols.length)])}
-function calc(board){let total=0;let wins=[];for(let r=0;r<3;r++){let row=[board[r*5],board[r*5+1],board[r*5+2],board[r*5+3],board[r*5+4]];let first=row[0];if(row.every(x=>x===first)){total+=bet*5;for(let c=0;c<5;c++)wins.push(r*5+c)}}return {total,wins}}
-function spin(){if(spinning||balance<bet)return;spinning=true;balance-=bet;update();msg.textContent='Zeus döndürüyor...';let t=0;const iv=setInterval(()=>{render(randBoard());t++;if(t>12){clearInterval(iv);const board=randBoard();const res=calc(board);render(board,res.wins);balance+=res.total;document.getElementById('win').textContent=res.total;msg.textContent=res.total>0?'Kazandın!':'Tekrar dene';update();spinning=false;}},90)}
-render();update();
 
-// Gates style upgrade
-const mults=[2,3,5,10,25,50,100,250,500];
-function countWins(board){let counts={};board.forEach(s=>counts[s]=(counts[s]||0)+1);let payout=0;let winIdx=[];for(const sym of symbols){let c=counts[sym]||0;if(c>=8){let factor=c>=12?5:c>=10?3:2;payout+=bet*factor;board.forEach((v,i)=>{if(v===sym)winIdx.push(i)});}}
-return {payout,winIdx};}
-function tumble(board){let total=0;let loops=0;let multi=0;while(loops<10){let res=countWins(board);if(res.payout===0)break;total+=res.payout;res.winIdx.forEach(i=>board[i]='');for(let c=0;c<5;c++){let col=[];for(let r=0;r<3;r++){let idx=r*5+c;if(board[idx])col.push(board[idx]);}
-while(col.length<3)col.unshift(symbols[Math.floor(Math.random()*symbols.length)]);
-for(let r=0;r<3;r++)board[r*5+c]=col[r];}
-if(Math.random()<0.35)multi+=mults[Math.floor(Math.random()*mults.length)];loops++;}
-if(multi>0)total*=multi;return {board,total,multi};}
-spin=function(){if(spinning||balance<bet)return;spinning=true;balance-=bet;update();msg.textContent='Dönüyor...';let t=0;const iv=setInterval(()=>{render(randBoard());t++;if(t>12){clearInterval(iv);let board=randBoard();let res=tumble(board);render(res.board);balance+=res.total;document.getElementById('win').textContent=res.total;msg.textContent=res.total>0?('Kazandın! Çarpan x'+(res.multi||1)):'Tekrar dene';update();spinning=false;}},90)};
+<div class="game">
+
+<div class="title">⚡ Gates of Olympus ⚡</div>
+
+<div id="grid" class="grid"></div>
+
+<div class="panel">
+<div>Bakiye: <span id="balance">1000</span> ₺</div>
+<div>Bahis: <span id="bet">10</span> ₺</div>
+<div>Kazanç: <span id="win">0</span> ₺</div>
+<div>Free Spin: <span id="free">0</span></div>
+</div>
+
+<div class="controls">
+<button onclick="betDown()">-</button>
+<button onclick="spin()">SPIN</button>
+<button onclick="betUp()">+</button>
+</div>
+
+<div class="msg" id="msg">Hazır</div>
+
+</div>
+
+<script>
+const symbols = ['💎','🟩','🟨','🟥','🔷','🟣','👑','⏳'];
+const scatter = '⚡';
+const multipliers = [2,3,5,10,25,50,100,250,500];
+
+let balance = 1000;
+let bet = 10;
+let totalWin = 0;
+let freeSpins = 0;
+let busy = false;
+
+const grid = document.getElementById("grid");
+
+function randomSymbol(){
+if(Math.random() < 0.08) return scatter;
+return symbols[Math.floor(Math.random()*symbols.length)];
+}
+
+function createBoard(){
+return Array.from({length:30},()=>randomSymbol());
+}
+
+function draw(board,wins=[]){
+grid.innerHTML='';
+board.forEach((s,i)=>{
+let div=document.createElement("div");
+div.className='cell'+(wins.includes(i)?' win':'');
+div.textContent=s;
+grid.appendChild(div);
+});
+}
+
+function updateUI(){
+balanceEl.textContent = balance;
+betEl.textContent = bet;
+winEl.textContent = totalWin;
+freeEl.textContent = freeSpins;
+}
+
+function betUp(){
+if(bet<100) bet+=10;
+updateUI();
+}
+
+function betDown(){
+if(bet>10) bet-=10;
+updateUI();
+}
+
+function countWins(board){
+let counts={};
+let winIdx=[];
+let payout=0;
+
+board.forEach(s=>{
+if(s!==scatter){
+counts[s]=(counts[s]||0)+1;
+}
+});
+
+for(let sym in counts){
+let c=counts[sym];
+
+if(c>=8){
+let multi = c>=12 ? 5 : c>=10 ? 3 : 2;
+payout += bet * multi;
+
+board.forEach((v,i)=>{
+if(v===sym) winIdx.push(i);
+});
+}
+}
+
+return {payout,winIdx};
+}
+
+function tumble(board){
+let total=0;
+let finalMulti=0;
+
+for(let loop=0;loop<8;loop++){
+
+let result = countWins(board);
+
+if(result.payout<=0) break;
+
+total += result.payout;
+
+result.winIdx.forEach(i=>board[i]='');
+
+for(let col=0;col<6;col++){
+
+let arr=[];
+
+for(let row=0;row<5;row++){
+let idx=row*6+col;
+if(board[idx]) arr.push(board[idx]);
+}
+
+while(arr.length<5){
+arr.unshift(randomSymbol());
+}
+
+for(let row=0;row<5;row++){
+board[row*6+col]=arr[row];
+}
+
+}
+
+if(Math.random()<0.35){
+finalMulti += multipliers[Math.floor(Math.random()*multipliers.length)];
+}
+
+}
+
+if(finalMulti>0){
+total*=finalMulti;
+}
+
+return {board,total,finalMulti};
+}
+
+function spin(){
+
+if(busy) return;
+
+if(balance<bet && freeSpins===0) return;
+
+busy=true;
+totalWin=0;
+updateUI();
+
+if(freeSpins>0){
+freeSpins--;
+}else{
+balance-=bet;
+}
+
+msg.textContent="Zeus döndürüyor...";
+
+let t=0;
+
+let anim=setInterval(()=>{
+
+draw(createBoard());
+
+t++;
+
+if(t>12){
+
+clearInterval(anim);
+
+let board=createBoard();
+
+let scatters = board.filter(x=>x===scatter).length;
+
+if(scatters>=4){
+freeSpins+=10;
+}
+
+let result=tumble(board);
+
+draw(result.board);
+
+totalWin=result.total;
+
+balance += totalWin;
+
+updateUI();
+
+if(scatters>=4){
+msg.textContent="⚡ FREE SPIN +10";
+}
+else if(totalWin>0){
+msg.textContent="Kazandın! x"+(result.finalMulti||1);
+}
+else{
+msg.textContent="Tekrar dene";
+}
+
+busy=false;
+
+}
+
+},90);
+
+}
+
+draw(createBoard());
+updateUI();
 </script>
+
 </body>
 </html>
