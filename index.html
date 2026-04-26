@@ -3,15 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Gates of Olympus Demo V3</title>
+<title>Gates of Olympus Demo V4</title>
 
 <style>
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:Arial,Helvetica,sans-serif;
-}
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,Helvetica,sans-serif;}
 
 body{
 background:linear-gradient(180deg,#120826,#25114d,#130822);
@@ -54,8 +49,20 @@ border-radius:12px;
 display:flex;
 justify-content:center;
 align-items:center;
-font-size:28px;
+font-size:24px;
 font-weight:bold;
+text-align:center;
+}
+
+.scatter{
+background:linear-gradient(180deg,#ffd700,#c68b00);
+color:#111;
+}
+
+.multi{
+background:linear-gradient(180deg,#46ff87,#169d45);
+color:#111;
+font-size:18px;
 }
 
 .win{
@@ -68,8 +75,8 @@ to{transform:scale(1.1);}
 }
 
 .panel{
-line-height:1.8;
 font-size:15px;
+line-height:1.8;
 }
 
 .controls{
@@ -87,21 +94,20 @@ font-size:16px;
 font-weight:bold;
 cursor:pointer;
 background:#ffb400;
-color:#111;
 }
 
 .buy{
 margin-top:10px;
 width:100%;
-background:#42ff8c;
+background:#48ff93;
 }
 
 .msg{
 text-align:center;
 margin-top:10px;
-min-height:24px;
 font-weight:bold;
-color:#7dff6e;
+min-height:24px;
+color:#8dff75;
 }
 </style>
 </head>
@@ -134,8 +140,8 @@ color:#7dff6e;
 
 <script>
 const symbols=['💎','🟩','🟨','🟥','🔷','🟣','👑','⏳'];
-const scatter='⚡';
-const multipliers=[2,3,5,10,25,50,100,250,500];
+const scat='⚡';
+const multiValues=[2,3,5,10,25,50,100,250,500];
 
 let balance=100000;
 let bet=10;
@@ -150,22 +156,49 @@ const winEl=document.getElementById("win");
 const freeEl=document.getElementById("free");
 const msg=document.getElementById("msg");
 
-function randomSymbol(){
-if(Math.random()<0.07) return scatter;
-return symbols[Math.floor(Math.random()*symbols.length)];
+function randomItem(){
+
+let r=Math.random();
+
+if(r<0.08) return {type:"scatter",value:scat};
+
+if(r<0.15){
+let m=multiValues[Math.floor(Math.random()*multiValues.length)];
+return {type:"multi",value:m};
+}
+
+return {
+type:"symbol",
+value:symbols[Math.floor(Math.random()*symbols.length)]
+};
 }
 
 function createBoard(){
-return Array.from({length:30},()=>randomSymbol());
+return Array.from({length:30},()=>randomItem());
 }
 
 function draw(board,wins=[]){
+
 grid.innerHTML='';
-board.forEach((s,i)=>{
+
+board.forEach((item,i)=>{
+
 let d=document.createElement("div");
-d.className='cell'+(wins.includes(i)?' win':'');
-d.textContent=s;
+
+d.className='cell';
+
+if(item.type==="scatter") d.classList.add("scatter");
+if(item.type==="multi") d.classList.add("multi");
+if(wins.includes(i)) d.classList.add("win");
+
+if(item.type==="multi"){
+d.textContent=item.value+"x";
+}else{
+d.textContent=item.value;
+}
+
 grid.appendChild(d);
+
 });
 }
 
@@ -187,33 +220,47 @@ updateUI();
 }
 
 function countWins(board){
+
 let counts={};
 let payout=0;
 let winIdx=[];
+let multiplier=1;
 
-board.forEach(s=>{
-if(s!==scatter){
-counts[s]=(counts[s]||0)+1;
+board.forEach((item,i)=>{
+
+if(item.type==="symbol"){
+counts[item.value]=(counts[item.value]||0)+1;
 }
+
+if(item.type==="multi"){
+multiplier += item.value;
+}
+
 });
 
 for(let sym in counts){
+
 let c=counts[sym];
 
 if(c>=8){
+
 let multi=c>=12?5:c>=10?3:2;
+
 payout += bet*multi;
 
-board.forEach((v,i)=>{
-if(v===sym) winIdx.push(i);
+board.forEach((item,i)=>{
+if(item.type==="symbol" && item.value===sym){
+winIdx.push(i);
+}
 });
 }
 }
 
-return {payout,winIdx};
+return {payout,winIdx,multiplier};
 }
 
 function tumble(board){
+
 let total=0;
 let finalMulti=1;
 
@@ -224,30 +271,32 @@ let res=countWins(board);
 if(res.payout<=0) break;
 
 total += res.payout;
+finalMulti = res.multiplier;
 
-res.winIdx.forEach(i=>board[i]='');
+res.winIdx.forEach(i=>board[i]=null);
 
 for(let col=0;col<6;col++){
 
 let arr=[];
 
 for(let row=0;row<5;row++){
+
 let idx=row*6+col;
+
 if(board[idx]) arr.push(board[idx]);
+
 }
 
 while(arr.length<5){
-arr.unshift(randomSymbol());
+arr.unshift(randomItem());
 }
 
 for(let row=0;row<5;row++){
 board[row*6+col]=arr[row];
 }
+
 }
 
-if(Math.random()<0.35){
-finalMulti += multipliers[Math.floor(Math.random()*multipliers.length)];
-}
 }
 
 total*=finalMulti;
@@ -262,13 +311,14 @@ if(balance<bet && freeSpins===0) return;
 
 busy=true;
 totalWin=0;
-updateUI();
 
 if(freeSpins>0){
 freeSpins--;
 }else{
 balance-=bet;
 }
+
+updateUI();
 
 msg.textContent="Zeus döndürüyor...";
 
@@ -286,9 +336,9 @@ clearInterval(anim);
 
 let board=createBoard();
 
-let scat=board.filter(x=>x===scatter).length;
+let scatCount=board.filter(x=>x.type==="scatter").length;
 
-if(scat>=4){
+if(scatCount>=4){
 freeSpins += 15;
 }
 
@@ -297,15 +347,17 @@ let res=tumble(board);
 draw(res.board);
 
 totalWin=res.total;
-balance += totalWin;
+balance+=totalWin;
 
 updateUI();
 
-if(scat>=4){
-msg.textContent="⚡ 4 Scatter! +15 Free Spins";
-}else if(totalWin>0){
-msg.textContent="Kazandın x"+res.finalMulti;
-}else{
+if(scatCount>=4){
+msg.textContent="⚡ 4 Scatter +15 Free Spins";
+}
+else if(totalWin>0){
+msg.textContent="Kazandın! x"+res.finalMulti;
+}
+else{
 msg.textContent="Tekrar dene";
 }
 
@@ -326,22 +378,21 @@ msg.textContent="Yetersiz bakiye";
 return;
 }
 
-balance -= cost;
-freeSpins += 15;
+balance-=cost;
+freeSpins+=15;
 
 let board=createBoard();
 
-/* 4 scatter garanti */
-board[0]=scatter;
-board[5]=scatter;
-board[12]=scatter;
-board[20]=scatter;
+board[0]={type:"scatter",value:scat};
+board[6]={type:"scatter",value:scat};
+board[12]={type:"scatter",value:scat};
+board[18]={type:"scatter",value:scat};
 
 draw(board);
 
 updateUI();
 
-msg.textContent="⚡ BUY FREESPINS ALINDI (+15)";
+msg.textContent="⚡ BUY FREESPINS +15";
 }
 
 draw(createBoard());
